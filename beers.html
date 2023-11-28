@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bières</title>
+    <style>
+      * {
+        font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+      }
+      ul {
+        list-style-position: inside;
+      }
+      .content {
+        display: grid;
+        grid-template-columns: 0.5fr 1fr;
+        height: 100vh;
+      }
+      .sidebar {
+        border: 1px #181818 solid;
+      }
+      .main {
+        display: flex;
+        border: 1px #181818 solid;
+        gap: 5rem;
+      }
+      .beers {
+        list-style: none;
+        padding: 2.5rem;
+        border-radius: 1rem;
+      }
+      .sidebar li {
+        cursor: pointer;
+        padding: 1rem;
+        background-color: inherit;
+        color: inherit;
+        transition: background-color 0.15s, color 0.15s;
+      }
+      .sidebar li:hover {
+        background-color: #181818;
+        color: #F5F5F5;
+      }
+      .image {
+        inset-inline-start: 1;
+        margin: 1rem;
+        object-fit: cover;
+        width: 10rem;
+        max-height: 100%;
+      }
+      .beerbg {
+        background-color: #F5F5F5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content">
+      <div class="sidebar">
+        <ul class="beers"></ul>
+      </div>
+      <div class="main"></div>
+    </div>
+    <script>
+      const $beerList = document.querySelector(".beers");
+      const $theBeer = document.querySelector(".main");
+      fetch("https://api.punkapi.com/v2/beers?per_page=10")
+        .then((r) => r.json())
+        .then((r) => {
+          let template = "";
+          r.forEach((beer) => {
+            template += `<li class="beers" data-id_beer="${beer.id}">${beer.name} - ${beer.abv}°</li>`;
+            console.log(r);
+          });
+          $beerList.innerHTML = template;
+        })
+        .catch((err) => console.log(err));
+
+      $beerList
+        .addEventListener("click", (event) => {
+          event.preventDefault();
+          let cible = event.target;
+          let templatetwo = "";
+          if (cible.classList.contains("beers")) {
+            let idBeer = cible.dataset.id_beer;
+            fetch(`https://api.punkapi.com/v2/beers/${idBeer}`)
+              .then((r) => r.json())
+              .then((r) => affDetails(r[0]))
+              .catch((err) => console.log(err));
+
+            const affDetails = (beer) => {
+              console.log(beer);
+
+              templatetwo = `
+              <div><img src="${beer.image_url}" alt="related beer img" class="image"></div>
+        <div class="beerbg">
+            <h2>${beer.name}</h2>
+            <h3>${beer.tagline}</h3>
+            <dl>
+                <dt>Color</dt>
+                <dd>${beer.ebc}</dd>
+                <dt>Taux d'alcool</dt>
+                <dd>${beer.abv}°</dd>
+                <dt>Description</dt>
+                <dd>${beer.description}</dd>
+                <hr>
+                <dt class="ingredients">Ingrédients</dt>
+                </br>
+                <dd>
+                    <dt>Malts</dt></br>
+                    <dd>
+                        <ul>`;
+                beer.ingredients.malt.forEach((malt) => {
+                    templatetwo += `<li>${malt.name}</li>`;
+                });
+                templatetwo += `
+                        </ul>
+                    </dd></br>
+                    <dt>Houblons</dt>
+                    <dd>
+                        <ul>
+                           ${beer.ingredients.hops.map((hop) => `<li>${hop.name}</li>`).join("")}
+                        </ul>
+                    </dd>
+                    <dt>Levures</dt>
+                    <dd>
+                        <ul>
+                            <li></li>
+                            <li></li>
+                        </ul>
+                    </dd>
+                </dd>
+            </dl>
+        </div>
+                `;
+              $theBeer.innerHTML = templatetwo;
+            };
+          }
+        })
+        .catch((err) => console.error(err));
+    </script>
+  </body>
+</html>
